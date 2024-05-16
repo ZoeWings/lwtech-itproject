@@ -34,7 +34,10 @@
                             </select>
                         </div>
                         <div class="mb-3 d-grid gap-2"><!-- stretches the button -->
-                            <a href="classes.html" class="btn btn-success">View Course Progress and Prereqs</a>                            
+                            <button class="btn btn-success" disabled>View Course Progress and Prereqs</button>
+                        </div>
+                        <div class="mb-3 d-grid gap-2"><!-- stretches the button -->
+                            <button class="btn btn-success" id="logout-button">Logout</button>
                         </div>
                 </div>
                 <div class="col">
@@ -43,5 +46,14 @@
             </div>
         </div>
     <script src="./js/bootstrap.bundle.min.js"></script>
+    <script src="./js/mock-backend.js"></script>
+    <script>
+        if (!isLoggedIn()) {
+            // redirect to login page if user is not logged in.
+            window.location.href = 'login.html'
+        }
+        const logoutButton = document.getElementById('logout-button')
+        logoutButton.addEventListener('click', logout)
+    </script>
     </body>
 </html>
