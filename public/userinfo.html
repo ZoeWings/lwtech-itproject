@@ -16,25 +16,19 @@
                     <h1>Welcome</h1>
                         <div class="mb-3">
                             <label for="studentId" class="form-label">Student ID</label>
-                            <input type="text" name="studentId" class="form-control"/>
+                            <input type="text" name="studentId" id="studentId" class="form-control" disabled/>
                         </div>
                         <div class="mb-3">
                             <label for="user" class="form-label">User</label>
-                            <input type="text" name="user" class="form-control"/>
+                            <input type="text" name="user" id="user" class="form-control" disabled/>
                         </div>
                         <div class="mb-3">
                             <label for="major" class="form-label">Major</label>
-                            <select class="form-select">
-                                <option value="CSD" selected>CSD</option>
-                                <option value="CS">CS</option>
-                                <option value="DTA">DTA</option>
-                                <option value="AAS-T">AAS-T</option>
-                                <option value="BS">BS</option>
-                                <option value="BAS">BAS</option>
+                            <select class="form-select" name="major" id="major-field">
                             </select>
                         </div>
                         <div class="mb-3 d-grid gap-2"><!-- stretches the button -->
-                            <button class="btn btn-success" disabled>View Course Progress and Prereqs</button>
+                            <button class="btn btn-success" id="view-courses-button">View Course Progress and Prereqs</button>
                         </div>
                         <div class="mb-3 d-grid gap-2"><!-- stretches the button -->
                             <button class="btn btn-success" id="logout-button">Logout</button>
@@ -54,6 +48,38 @@
         }
         const logoutButton = document.getElementById('logout-button')
         logoutButton.addEventListener('click', logout)
+        const majors = loadMajors()
+        const session = loadSession()
+        const studendIdField = document.getElementById('studentId')
+        studendIdField.value = session.id
+        const user = document.getElementById('user')
+        user.value = session.name
+        const majorField = document.getElementById('major-field')
+        Object.keys(majors).forEach((key) => {
+            const option = document.createElement('option')
+            option.value = key
+            if (session.major === key) {
+                option.selected = true
+            }
+            option.innerHTML = majors[key]
+            majorField.appendChild(option)
+        })
+        majorField.addEventListener('change', function (event) {
+            event.preventDefault()
+            event.stopPropagation()
+            const newMajor = majorField.value
+            try {
+                updateMajor(session.login, newMajor)
+            } catch (e) {
+                alert(e)
+            }
+        })
+        const viewCoursesButton = document.getElementById('view-courses-button')
+        viewCoursesButton.addEventListener('click', function (event) {
+            event.preventDefault()
+            event.stopPropagation()
+            window.location.href = 'classes.html'
+        })
     </script>
     </body>
 </html>
