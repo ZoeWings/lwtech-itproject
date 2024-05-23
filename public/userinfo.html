@@ -42,14 +42,20 @@
     <script src="./js/bootstrap.bundle.min.js"></script>
     <script src="./js/mock-backend.js"></script>
     <script>
-        if (!isLoggedIn()) {
+        const session = loadSession()
+        if (!session.isLoggedIn()) {
             // redirect to login page if user is not logged in.
-            window.location.href = 'login.html'
+            // window.location.href = 'login.html'
+            console.warn('not logged in for some reason', session)
         }
         const logoutButton = document.getElementById('logout-button')
-        logoutButton.addEventListener('click', logout)
+        logoutButton.addEventListener('click', (event) => {
+            event.stopPropagation()
+            event.preventDefault()
+            session.logout()
+            window.location.href = 'login.html'
+        })
         const majors = loadMajors()
-        const session = loadSession()
         const studendIdField = document.getElementById('studentId')
         studendIdField.value = session.id
         const user = document.getElementById('user')
@@ -61,7 +67,7 @@
             if (session.major === key) {
                 option.selected = true
             }
-            option.innerHTML = majors[key]
+            option.innerHTML = majors[key].major
             majorField.appendChild(option)
         })
         majorField.addEventListener('change', function (event) {

@@ -46,7 +46,8 @@
             // call the login function
             // get the results.
             // we should be to use bootstrap to deal with "required" fields, so they are checked before calling the function
-            if (login(username, password)) {
+            const session = login(username, password)
+            if (session) {
                 window.location.href = 'userinfo.html'
             } else { // how do I alert on the form?
                 alert('failed login')

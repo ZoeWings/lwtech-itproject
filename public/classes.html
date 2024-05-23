@@ -9,59 +9,40 @@
     <body><!-- this section displays what's inside the page -->
         <div class="container text-center">
             <div class="row">
-                <div class="col">
+                <div class="col" id="degree-table-container">
                     <h1>Classes</h1>
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>&nbsp;</th>
-                                <th>Degree 1</th>
-                                <th>Degree 2</th>
-                                <th>Degree 3</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Quarter 1</td>
-                                <td>&nbsp;</td>
-                                <td>&nbsp;</td>
-                                <td>&nbsp;</td>
-                            </tr>
-                            <tr>
-                                <td>Quarter 2</td>
-                                <td>&nbsp;</td>
-                                <td>&nbsp;</td>
-                                <td>&nbsp;</td>
-                            </tr>
-                            <tr>
-                                <td>Quarter 3</td>
-                                <td>&nbsp;</td>
-                                <td>&nbsp;</td>
-                                <td>&nbsp;</td>
-                            </tr>
-                            <tr>
-                                <td>Quarter 4</td>
-                                <td>&nbsp;</td>
-                                <td>&nbsp;</td>
-                                <td>&nbsp;</td>
-                            </tr>
-                            <tr>
-                                <td>Quarter 5</td>
-                                <td>&nbsp;</td>
-                                <td>&nbsp;</td>
-                                <td>&nbsp;</td>
-                            </tr>
-                            <tr>
-                                <td>Quarter 6</td>
-                                <td>&nbsp;</td>
-                                <td>&nbsp;</td>
-                                <td>&nbsp;</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <button id="session-button" class="btn btn-success"></button>
                 </div>
             </div>
         </div>
     <script src="./js/bootstrap.bundle.min.js"></script>
+    <script src="./js/mock-backend.js"></script>
+    <script src="./js/class-selection.js"></script>
+    <script>
+        const session = loadSession()
+        console.log('********* loadSession', session)
+        const majors = loadMajors()
+        const sessionButton = document.getElementById('session-button')
+        if (!session.isLoggedIn()) {
+            // we want to show a login button.
+            sessionButton.innerHTML = "Log In"
+            sessionButton.addEventListener('click', (event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                window.location.href = "login.html"
+            })
+        } else {
+            sessionButton.innerHTML = "Log Out"
+            sessionButton.addEventListener('click', (event) => {
+                event.stopPropagation()
+                event.preventDefault()
+                session.logout()
+                window.location.href = 'login.html'
+            })
+        }
+        const container = document.getElementById('degree-table-container')
+        const degreeTable = new DegreeTable(majors, session)
+        container.appendChild(degreeTable.element)
+    </script>
     </body>
 </html>
