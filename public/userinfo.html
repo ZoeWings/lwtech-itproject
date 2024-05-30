@@ -40,12 +40,55 @@
             </div>
         </div>
     <script src="./js/bootstrap.bundle.min.js"></script>
+    <script src="./js/mock-data.js"></script>
     <script src="./js/mock-backend.js"></script>
     <script>
+        class MajorSelector {
+            constructor(element, majors, session) {
+                this.element = element
+                this.majors = majors
+                this.session = session
+                console.log('*** MajorSelector', this.element, this.majors, this.session)
+                this.element.appendChild(this.makeOptionField('', '--[Select A Major]--', this.session.major === ''))
+                Object.keys(this.majors).forEach((degreeId) => {
+                    const major = this.majors[degreeId]
+                    this.element.appendChild(this.makeOptionField(major.degreeId, major.name, this.session.major === major.degreeId))
+                })
+                this.element.appendChild(this.makeOptionField('all', '--[Show All Majors]--', false))
+                this.element.addEventListener('change', (event) => {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    const newMajor = this.element.value
+                    try {
+                        if (newMajor === '') {
+                            console.warn('***** no major is selected')
+                        } else if (newMajor === 'all') { // special case - show all majors to view, not to select.
+                            this.session.browseAllMajors(true)
+                        } else {
+                            this.session.browseAllMajors(false)
+                            this.session.setMajor(newMajor)
+                        }
+                    } catch (e) {
+                        alert(e)
+                    }
+                })
+            }
+
+            makeOptionField(value, text, selected) {
+                const optionField = document.createElement('option')
+                optionField.value = value
+                optionField.innerHTML = text
+                if (selected) {
+                    optionField.selected = true
+                }
+                return optionField
+            }
+        }
+
         const session = loadSession()
         if (!session.isLoggedIn()) {
             // redirect to login page if user is not logged in.
-            // window.location.href = 'login.html'
+            window.location.href = 'login.html'
             console.warn('not logged in for some reason', session)
         }
         const logoutButton = document.getElementById('logout-button')
@@ -55,36 +98,23 @@
             session.logout()
             window.location.href = 'login.html'
         })
-        const majors = loadMajors()
         const studendIdField = document.getElementById('studentId')
         studendIdField.value = session.id
         const user = document.getElementById('user')
         user.value = session.name
-        const majorField = document.getElementById('major-field')
-        Object.keys(majors).forEach((key) => {
-            const option = document.createElement('option')
-            option.value = key
-            if (session.major === key) {
-                option.selected = true
-            }
-            option.innerHTML = majors[key].major
-            majorField.appendChild(option)
-        })
-        majorField.addEventListener('change', function (event) {
-            event.preventDefault()
-            event.stopPropagation()
-            const newMajor = majorField.value
-            try {
-                updateMajor(session.login, newMajor)
-            } catch (e) {
-                alert(e)
-            }
-        })
+        const majors = loadMajors('all')
+        console.log('****** loadMajors', majors)
+        const majorField = new MajorSelector(document.getElementById('major-field'), majors, session)
         const viewCoursesButton = document.getElementById('view-courses-button')
         viewCoursesButton.addEventListener('click', function (event) {
             event.preventDefault()
             event.stopPropagation()
-            window.location.href = 'classes.html'
+            const selectedMajor = majorField.element.value
+            if (selectedMajor === '') {
+                alert('Please select a major')
+            } else {
+                window.location.href = 'classes.html'
+            }
         })
     </script>
     </body>

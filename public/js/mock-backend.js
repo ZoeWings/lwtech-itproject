@@ -1,142 +1,86 @@
-const MOCK_CLASSES = [
-    {
-        classId: 'C-1',
-        name: 'Class 1',
-        prereqs: []
-    },
-    {
-        classId: 'C-2',
-        name: 'Class 2',
-        prereqs: [
-            'C-1'
-        ]
-    },
-    {
-        classId: 'C-3',
-        name: 'Class 3',
-        prereqs: [
-            'C-2'
-        ]
-    },
-    {
-        classId: 'C-4',
-        name: 'Class 4',
-        prereqs: [
-            'C-3'
-        ]
-    },
-    {
-        classId: 'C-5',
-        name: 'Class 5',
-        prereqs: [
-            'C-2',
-            'C-3'
-        ]
-    },
-]
-const MOCK_MAJORS = {
-    // 'CSD': 'CSD',
-    // 'CS': 'CS',
-    // 'DTA': 'DTA',
-    'AAS-T': 'AAS-T',
-    'BS': 'BS',
-    'BAS': 'BAS'
-}
-
-const MAJOR_CLASSES = {
-    'AAS-T': [
-        {
-            quarter: 1,
-            classes: [
-                'C-1'
-            ],
-        },
-        {
-            quarter: 2,
-            classes: [
-                'C-2'
-            ]
-        },
-    ],
-    'BS': [
-        {
-            quarter: 1,
-            classes: [
-                'C-1'
-            ]
-        },
-        {
-            quarter: 2,
-            classes: [
-                'C-2'
-            ],
-        },
-        {
-            quarter: 3,
-            classes: [
-                'C-3'
-            ]
-        },
-    ],
-    'BAS': [
-        {
-            quarter: 1,
-            classes: [
-                'C-1'
-            ]
-        },
-        {
-            quarter: 2,
-            classes: [
-                'C-2'
-            ],
-        },
-        {
-            quarter: 3,
-            classes: [
-                'C-3'
-            ]
-        },
-        {
-            quarter: 4,
-            classes: [
-                'C-4',
-                'C-5'
-            ]
-        }
-    ],
-}
-
-function loadMajors() {
+function loadMajors(degreeId) {
     const output = {}
-    Object.keys(MOCK_MAJORS).forEach((major) => {
-        const classesByMajor = loadClassesByMajor(major)
-        output[major] = {
-            major: major,
-            classes: classesByMajor
+    MOCK_MAJORS.forEach((major) => {
+        if (degreeId === 'all' || major.degreeId == degreeId) {
+            const classesByMajor = loadClassesByMajor(major)
+            output[major.degreeId] = {
+                degreeId: major.degreeId,
+                name: major.name,
+                quarters: classesByMajor
+            }
         }
     })
     return output
 }
 
-function selectClassesByIds(classIds) {
-    return MOCK_CLASSES.filter((cls) => {
-        return classIds.find((classId) => cls.classId === classId)
+function normalizePrereqistes(prereqs) {
+    return prereqs.map((prereq) => {
+        // retrieve the class detail.
+        const classDetail = MOCK_CLASSES.find((cls) => cls.classId === prereq)
+        if (classDetail) {
+            // look for alts.
+            const altClassIds = classDetail.alts.map((alt) => {
+                const altClassDetail = MOCK_CLASSES.find((cls) => cls.classId === alt)
+                if (altClassDetail) {
+                    return altClassDetail.classId
+                } else {
+                    return null
+                }
+            })
+                .filter((cls) => !!cls)
+            return {
+                classIds: [ classDetail.classId ].concat(altClassIds)
+            }
+        } else {
+            return null
+        }
+    })
+        .filter((cls) => !!cls)
+}
+
+function loadOneClassDetails(classId) {
+    const classDetail = MOCK_CLASSES.find((cls2) => cls2.classId === classId)
+    const alternates = classDetail.alts.map((alt) => {
+        const altClass = MOCK_CLASSES.find((cls3) => cls3.classId == alt)
+        if (altClass) {
+            return {
+                classId: altClass.classId,
+                name: altClass.name,
+                prereqs: altClass.prereqs.length > 0 ? [{
+                    classIds: altClass.prereqs
+                }] : [],
+                alts: altClass.alts || []
+            }
+        } else {
+            return null
+        }
+    })
+        .filter((cls) => !!cls)
+    return {
+        classId: classDetail.classId,
+        name: classDetail.name,
+        // need to change the prereqs to use alts.
+        prereqs: normalizePrereqistes(classDetail.prereqs),
+        alts: alternates
+    }
+}
+
+function loadClassesDetails(classes) {
+    // cls contains classId & alts
+    return classes.map((cls) => {
+        return loadOneClassDetails(cls.classId)
     })
 }
 
 function loadClassesByMajor(major) {
-    if (Object.prototype.hasOwnProperty.call(MAJOR_CLASSES, major)) {
-        return MAJOR_CLASSES[major].map((quarter) => {
-            const classes = selectClassesByIds(quarter.classes)
+    return major.quarters.map((quarter) => {
+            const classes = loadClassesDetails(quarter.classes)
+            // we should also do the same for all alts classes.
             return {
                 quarter: quarter.quarter,
                 classes: classes
             }
         })
-    } else {
-        throw new Error(`UnknownMajor:${major}`)
-    }
 }
 
 const MOCK_USER_PROFILES = {
@@ -145,7 +89,7 @@ const MOCK_USER_PROFILES = {
         login: 'zoe',
         name: 'Zoe Zhang',
         password: '1234',
-        major: 'BAS',
+        // major: 'BAS',
     }
 }
 
@@ -206,7 +150,11 @@ class SessionObject {
         this.session = session
         this.storage = storage
         // store the selected classes under key == login
-        this.selectedClasses = storage.get(this.session.login, [])
+        this.userData = storage.get(this.session.login, {
+            major: '',
+            selectedClasses: [],
+        })
+        // this.selectedClasses = storage.get(`selectedClass:${this.session.login}`, [])
         this.eventTarget = new EventTarget()
     }
 
@@ -218,22 +166,57 @@ class SessionObject {
         return this.session.id
     }
 
+    get login() {
+        return this.session.login
+    }
+
     get token() {
         return this.session.token
     }
 
     get major() {
-        return this.session.major
+        return this.userData.major
+    }
+
+    setMajor(degreeId) {
+        const foundMajor = MOCK_MAJORS.find((major) => {
+            console.log('******** major', major, degreeId, degreeId === major.degreeId)
+            return degreeId === major.degreeId
+        })
+        console.log('***** setMajor', degreeId, foundMajor, MOCK_MAJORS)
+        if (foundMajor) {
+            this.userData.major = degreeId
+            this.saveUserData()
+        } else {
+            throw new Error(`UnknownMajor:${degreeId}`)
+        }
+    }
+
+    get browseMajor() {
+        return this.session.browseAllMajors || this.userData.major
+    }
+
+    browseAllMajors(setting) {
+        if (setting) {
+            this.session.browseAllMajors = 'all'
+        } else {
+            delete this.session.browseAllMajors
+        }
+        this.saveSessionData()
+    }
+
+    get selectedClasses() {
+        return this.userData.selectedClasses
     }
 
     selectClass(classId) {
         // make sure it's not a duplicate.
-        if (this.selectedClasses.find((clsId) => clsId === classId)) {
+        if (this.userData.selectedClasses.find((clsId) => clsId === classId)) {
             // this is a duplicate, do nothing
             console.warn('SessionObject.selectClass:addedTwice', classId)
         } else {
-            this.selectedClasses.push(classId)
-            this.saveSelectClasses()
+            this.userData.selectedClasses.push(classId)
+            this.saveUserData()
             this.eventTarget.dispatchEvent(new CustomEvent('selectClass', {
                 detail: {
                     classId: classId
@@ -244,9 +227,9 @@ class SessionObject {
 
     unselectClass(classId) {
         // console.log('***** SessionObject.unselectClass', classId, this.selectedClasses)
-        if (this.selectedClasses.find((clsId) => clsId === classId)) {
-            this.selectedClasses = this.selectedClasses.filter((clsId) => clsId !== classId)
-            this.saveSelectClasses()
+        if (this.userData.selectedClasses.find((clsId) => clsId === classId)) {
+            this.userData.selectedClasses = this.userData.selectedClasses.filter((clsId) => clsId !== classId)
+            this.saveUserData()
             this.eventTarget.dispatchEvent(new CustomEvent('unselectClass', {
                 detail: {
                     classId: classId
@@ -277,12 +260,33 @@ class SessionObject {
         this.storage.set('session', this.session)
     }
 
-    saveSelectClasses() {
-        this.storage.set(this.session.login, this.selectedClasses)
+    saveUserData() {
+        this.storage.set(this.session.login, this.userData)
+    }
+
+    saveSessionData() {
+        this.storage.set('session', this.session)
     }
 
     logout() { // logout clears the session
         this.storage.del('session')
+    }
+
+    loadClassById(classId) {
+        return loadOneClassDetails(classId)
+    }
+
+    loadPostReqClasses(classId) {
+        return MOCK_CLASSES.filter((cls) => {
+            const isPostReq = cls.prereqs.find((prereq) => prereq === classId)
+            return !!isPostReq
+        })
+    }
+
+    isAlternateSelected(classIds) {
+        return classIds.find((clsId) => {
+            return this.selectedClasses.find((cls2) => cls2 === clsId)
+        })
     }
 }
 
@@ -295,12 +299,10 @@ function setSession(loggedIn, userProfile = {}) { // loggedIn is a boolean value
             name: userProfile.name,
             major: userProfile.major,
             token: MOCK_SECRET_LOGIN_TOKEN,
-            selectedClasses: userProfile.selectedClasses || []
         }, storage)
         session.save()
         return session
     } else { // if false, we reset the login token
-        storage.
         window.name = ''
     }
 }
@@ -321,20 +323,6 @@ function loadSession() {
         console.error('loadSession.error', e)
         storage.set('session', {})
         return new SessionObject({}, storage)
-    }
-}
-
-function updateMajor(login, major) {
-    if (Object.prototype.hasOwnProperty.call(MOCK_USER_PROFILES, login)) {
-        const userProfile = MOCK_USER_PROFILES[login]
-        if (Object.prototype.hasOwnProperty.call(MOCK_MAJORS, major)) {
-            userProfile.major = major
-            setSession(true, userProfile)
-        } else {
-            throw new Error(`UnknownMajor:${major}`)
-        }
-    } else {
-        throw new Error(`UnknownLogin:${login}`)
     }
 }
 

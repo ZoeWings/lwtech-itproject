@@ -16,21 +16,16 @@
             </div>
         </div>
     <script src="./js/bootstrap.bundle.min.js"></script>
+    <script src="./js/mock-data.js"></script>
     <script src="./js/mock-backend.js"></script>
     <script src="./js/class-selection.js"></script>
     <script>
         const session = loadSession()
         console.log('********* loadSession', session)
-        const majors = loadMajors()
+        const majors = loadMajors(session.browseMajor)
         const sessionButton = document.getElementById('session-button')
         if (!session.isLoggedIn()) {
-            // we want to show a login button.
-            sessionButton.innerHTML = "Log In"
-            sessionButton.addEventListener('click', (event) => {
-                event.preventDefault()
-                event.stopPropagation()
-                window.location.href = "login.html"
-            })
+            window.location.href = 'login.html'
         } else {
             sessionButton.innerHTML = "Log Out"
             sessionButton.addEventListener('click', (event) => {
