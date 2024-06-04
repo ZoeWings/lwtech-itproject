@@ -1,0 +1,23 @@
+h1 {
+    color: #FDB41B;
+}
+h3 {
+    color: #FDB41B;
+}
+
+.btn-primary {
+    background-color: #00A6DC;
+}
+
+img.header-pic {
+    width: 100%;
+}
+
+.form-label {
+    text-align: left !important;
+    width: 100%;
+}
+
+.form-control {
+    background-color: rgb(234, 234, 234);
+}

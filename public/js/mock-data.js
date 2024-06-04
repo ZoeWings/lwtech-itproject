@@ -629,9 +629,10 @@ const MOCK_MAJORS = [
             {
                 "quarter": 4,
                 "classes": [
-                    {
-                        "classId": 8
-                    },
+
+
+                    //     "classId": 8
+                    // },
                     {
                         "classId": 21
                     },
@@ -1023,3 +1024,13 @@ const MOCK_MAJORS = [
         ]
     }
 ]
+
+const MOCK_USER_PROFILES = {
+    'zoe': {
+        id: 'MockID 1101',
+        login: 'zoe',
+        name: 'Zoe',
+        password: '1234',
+        // major: 'BAS',
+    }
+}

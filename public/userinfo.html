@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>User Info Page</title>
         <link href="./css/bootstrap.min.css" rel="stylesheet">
+        <link href="./css/style.css" rel="stylesheet">
     </head>
     <body><!-- this section displays what's inside the page -->
         <div class="container text-center">
@@ -13,7 +14,11 @@
 
                 </div>
                 <div class="col">
-                    <h1>Welcome</h1>
+                    <p>&nbsp;</p>
+                    <img class="header-pic" src="LWTech_logo.png">
+                    <p>&nbsp;</p>
+                    <h3 id="welcome">Welcome back,<br>Zoe!</h3>
+                    <p>&nbsp;</p>
                         <div class="mb-3">
                             <label for="studentId" class="form-label">Student ID</label>
                             <input type="text" name="studentId" id="studentId" class="form-control" disabled/>
@@ -28,10 +33,10 @@
                             </select>
                         </div>
                         <div class="mb-3 d-grid gap-2"><!-- stretches the button -->
-                            <button class="btn btn-success" id="view-courses-button">View Course Progress and Prereqs</button>
+                            <button class="btn btn-primary" id="view-courses-button">View Course Progress and Prereqs</button>
                         </div>
                         <div class="mb-3 d-grid gap-2"><!-- stretches the button -->
-                            <button class="btn btn-success" id="logout-button">Logout</button>
+                            <button class="btn btn-primary" id="logout-button">Logout</button>
                         </div>
                 </div>
                 <div class="col">
@@ -47,6 +52,7 @@
             constructor(element, majors, session) {
                 this.element = element
                 this.majors = majors
+
                 this.session = session
                 console.log('*** MajorSelector', this.element, this.majors, this.session)
                 this.element.appendChild(this.makeOptionField('', '--[Select A Major]--', this.session.major === ''))
@@ -116,6 +122,8 @@
                 window.location.href = 'classes.html'
             }
         })
+        const welcomeField = document.getElementById('welcome')
+        welcomeField.innerHTML = "Welcome back, " + session.name + "!"
     </script>
     </body>
 </html>

@@ -83,16 +83,6 @@ function loadClassesByMajor(major) {
         })
 }
 
-const MOCK_USER_PROFILES = {
-    'zoe': {
-        id: 'MockID 1101',
-        login: 'zoe',
-        name: 'Zoe Zhang',
-        password: '1234',
-        // major: 'BAS',
-    }
-}
-
 
 // use this as the token to represent the user has logged in.
 const MOCK_SECRET_LOGIN_TOKEN = 'this is the secret login token' // the data doesn't matter. it's a mock
@@ -139,6 +129,7 @@ class MockStorage {
         window.name = JSON.stringify(this.data)
     }
 }
+
 
 const storage = new MockStorage()
 
